@@ -39,8 +39,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         setState(() {
           _isLoading = false;
         });
-        // Navigate to home on successful signup
-        context.go('/');
+        // Set authentication state and navigate to home
+        AuthService.login();
+        context.go('/home');
       }
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/auth_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String username;
@@ -27,6 +28,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       questionCount: 127,
       answerCount: 89,
       joinDate: DateTime.now().subtract(const Duration(days: 180)),
+      recentQuestions: [
+        'What\'s your favorite programming language and why?',
+        'How do you stay motivated when working on difficult projects?',
+        'What advice would you give to someone just starting in tech?',
+        'What\'s the best project you\'ve worked on recently?',
+      ],
       recentAnswers: [
         'Flutter is amazing for cross-platform development! The hot reload feature saves so much time.',
         'I recommend starting with Dart basics first, then moving to Flutter widgets.',
@@ -73,13 +80,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
+          onPressed: () {
+            if (AuthService.isLoggedIn) {
+              context.go('/home');
+            } else {
+              context.go('/');
+            }
+          },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.question_answer),
-            onPressed: () => context.go('/user/${widget.username}/questions'),
-          ),
+          if (AuthService.isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.question_answer),
+              onPressed: () => context.go('/user/${widget.username}/questions'),
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -163,82 +177,127 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.help_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Ask @${widget.username} anything',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                  child: AuthService.isLoggedIn
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.help_outline,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Ask @${widget.username} anything',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your question will be sent anonymously',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _questionController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'What would you like to ask ${widget.username}?',
-                          border: const OutlineInputBorder(),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.lock_outline,
-                            size: 16,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Anonymous question',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const Spacer(),
-                          SizedBox(
-                            width: 120,
-                            child: ElevatedButton(
-                              onPressed: _isAsking ? null : _handleAskQuestion,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                foregroundColor: Colors.white,
+                            const SizedBox(height: 8),
+                            Text(
+                              'Your question will be sent anonymously',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
                               ),
-                              child: _isAsking
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text('Send'),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _questionController,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                hintText: 'What would you like to ask ${widget.username}?',
+                                border: const OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Anonymous question',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const Spacer(),
+                                SizedBox(
+                                  width: 120,
+                                  child: ElevatedButton(
+                                    onPressed: _isAsking ? null : _handleAskQuestion,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: _isAsking
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text('Send'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Login to ask questions',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'You need to login or sign up to ask @${widget.username} questions',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () => context.go('/login'),
+                                  child: const Text('Login'),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton(
+                                  onPressed: () => context.go('/signup'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Sign Up'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -263,70 +322,225 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () => context.go('/user/${widget.username}/questions'),
-                            child: const Text('View all'),
-                          ),
+                          if (AuthService.isLoggedIn)
+                            TextButton(
+                              onPressed: () => context.go('/user/${widget.username}/questions'),
+                              child: const Text('View all'),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ...(_userProfile.recentAnswers.take(3).map((answer) => 
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[200]!),
+                      if (AuthService.isLoggedIn) ...[
+                        // Show questions and answers for logged-in users
+                        ...(List.generate(
+                          _userProfile.recentQuestions.length.clamp(0, _userProfile.recentAnswers.length),
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Question
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      _userProfile.recentQuestions[index],
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Answer
+                                  Text(
+                                    _userProfile.recentAnswers[index],
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Anonymous question',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          ),
+                        )),
+                        if (_userProfile.recentAnswers.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(24),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  answer,
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                Icon(
+                                  Icons.question_answer_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
                                 Text(
-                                  'Anonymous question',
+                                  'No answers yet',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Be the first to ask a question!',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Colors.grey[500],
-                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      )),
-                      if (_userProfile.recentAnswers.isEmpty)
+                      ] else ...[
+                        // Show questions but hide answers for non-logged-in users
+                        ...(List.generate(
+                          _userProfile.recentQuestions.length.clamp(0, _userProfile.recentAnswers.length),
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Question - visible to everyone
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      _userProfile.recentQuestions[index],
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Hidden answer with login prompt
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.lock_outline,
+                                          color: Colors.grey[600],
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Login to see answer',
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Anonymous question',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )),
+                        if (_userProfile.recentAnswers.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.question_answer_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No answers yet',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Be the first to ask a question!',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        // Add login prompt at the bottom
+                        const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           child: Column(
                             children: [
-                              Icon(
-                                Icons.question_answer_outlined,
-                                size: 48,
-                                color: Colors.grey[400],
+                              Text(
+                                'Want to see all answers?',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(height: 12),
-                              Text(
-                                'No answers yet',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Be the first to ask a question!',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[500],
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => context.go('/login'),
+                                    child: const Text('Login'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () => context.go('/signup'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('Sign Up'),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -385,6 +599,7 @@ class UserProfile {
   final int questionCount;
   final int answerCount;
   final DateTime joinDate;
+  final List<String> recentQuestions;
   final List<String> recentAnswers;
 
   UserProfile({
@@ -394,6 +609,7 @@ class UserProfile {
     required this.questionCount,
     required this.answerCount,
     required this.joinDate,
+    required this.recentQuestions,
     required this.recentAnswers,
   });
 }
