@@ -1,0 +1,17 @@
+This will be a clone of askfm called "askme"
+// Project: askme
+// sites:
+- /login
+- /signup
+- /user/<username>
+- /user/<username>/questions
+- /home aka /
+
+
+Iam using supabase for things like auth and database
+
+i want to use flask for the backend
+
+make it modern and easy to use no complexity
+always make it for mobile and desktop no
+
